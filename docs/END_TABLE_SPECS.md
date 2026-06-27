@@ -13,8 +13,11 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
 * Legs: two crossed (X) frames, 3/4" stock, tapered 2 1/2" wide at top to 1 1/4" at the foot.
   * Joined at each crossing with a half-lap, 3/8" deep.
   * Feet splayed past the tips for stance; legs centered under the top.
-  * End overhang ~4 1/2", side overhang ~1 1/2".
-* One central stretcher ties the two frames together.
+  * End overhang ~4 1/2", side overhang ~1" (legs set wide for side-to-side stability).
+* One central stretcher ties the two frames together at the bottom.
+* Two cleats (~7 x 3 x 3/4) under the ends of the top: the leg tips bear on them,
+  they tie the two frames together at the top, and the top fastens to them with
+  slotted screws to allow seasonal wood movement.
 
 ## Tools on hand
 Tablesaw, router, miter saw, and standard hand tools.

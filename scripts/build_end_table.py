@@ -48,20 +48,31 @@ BEVEL_RUN = 0.5           # 45-deg chamfer width = TOP_THK - EDGE_BAND
 # Soft "mid-century" eased top edge (a small roundover) to echo the chair.
 EASE_R = 0.125            # 1/8" roundover on the top's upper perimeter edge
 
-LEG_TOP_Z = TOTAL_H - TOP_THK     # 23.25 -> legs meet underside of top
+# Cleats: battens under each end of the top. The leg tips bear on them, and they
+# fasten to the top with slotted screws (allowing seasonal wood movement) while
+# tying the two X-frames together at the top for rigidity.
+CLEAT_THK = 0.75          # 3/4" stock (Z); legs stop this far below the top
+CLEAT_W   = 3.0           # X dimension -- covers the leg-tip bearing footprint
+CLEAT_LEN = 7.0           # Y dimension -- runs across the width of the top
+
+LEG_TOP_Z = TOTAL_H - TOP_THK         # 23.25 -> underside of the top
+LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK    # 22.5  -> legs stop here; cleats fill up
 
 # foot / tip X-positions of an X-frame (legs pulled inboard so the top
 # overhangs the ends; feet stay splayed past the tips for a wide stance)
 FOOT_L, FOOT_R = 3.0, 17.0
 TIP_L,  TIP_R  = 4.5, 15.5
 
-# Y-centerlines of the two frames (1.5" overhang each side of the 7" top)
-OVERHANG = 1.5
+# Y-centerlines of the two frames. A smaller side overhang widens the foot
+# stance across the weak (side-to-side) axis for better tip resistance, while
+# the big end overhang and the top bevel are unaffected.
+OVERHANG = 1.0           # side reveal of the 8.25" top past each frame
 FRAME_A_Y0 = OVERHANG - STOCK / 2.0          # near face of frame A boards
 FRAME_B_Y0 = (TOP_WID - OVERHANG) - STOCK / 2.0
 
-# big clip box used to trim boards flat at floor (Z=0) and underside of top
-CLIP = Part.makeBox(40 * IN, 12 * IN, LEG_TOP_Z * IN, App.Vector(-6 * IN, -3 * IN, 0))
+# big clip box used to trim boards flat at floor (Z=0) and the top of the legs
+# (the leg tips stop at LEG_TRIM_Z; the cleats fill from there to the top)
+CLIP = Part.makeBox(40 * IN, 12 * IN, LEG_TRIM_Z * IN, App.Vector(-6 * IN, -3 * IN, 0))
 
 
 def tapered_board(foot_x, tip_x):
@@ -163,6 +174,14 @@ SZ0, SZ1 = 11.75, 14.25    # 2.5" tall, centered on the ~Z13 crossing
 stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0) * IN,
                          App.Vector(SX0 * IN, A_inner * IN, SZ0 * IN))
 
+# Cleats: a batten under each end of the top, centered across the width. The leg
+# tips bear up on them, and slotted screws run up into the top (wood movement).
+cleat_y0 = (TOP_WID - CLEAT_LEN) / 2.0
+cleat1 = Part.makeBox(CLEAT_W * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
+                      App.Vector((TIP_L - CLEAT_W / 2.0) * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+cleat2 = Part.makeBox(CLEAT_W * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
+                      App.Vector((TIP_R - CLEAT_W / 2.0) * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+
 # ------------------------------------------------------------------- document
 doc = App.newDocument("EndTable")
 parts = [
@@ -172,6 +191,8 @@ parts = [
     ("Frame2_LegFwd",  fB_a),
     ("Frame2_LegBack", fB_b),
     ("Stretcher",      stretcher),
+    ("Cleat_End1",     cleat1),
+    ("Cleat_End2",     cleat2),
 ]
 for name, shp in parts:
     obj = doc.addObject("Part::Feature", name)
