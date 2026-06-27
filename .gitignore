@@ -10,3 +10,4 @@ __pycache__/
 model/*.stl
 renders/end_table_preview.png
 renders/table_clean.png
+docs/diagrams/*.png
