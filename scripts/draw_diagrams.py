@@ -206,8 +206,11 @@ def end_elevation():
     rect(ax, 0, LEG_TOP_Z, TOP_WID, TOP_THK)                   # top
     rect(ax, FRAME_A_Y0, 0, STOCK, LEG_TRIM_Z)                 # frame A
     rect(ax, FRAME_B_Y0, 0, STOCK, LEG_TRIM_Z)                 # frame B
-    fill_poly(ax, cleat_profile(FRAME_A_Y0, FRAME_B_Y0 + STOCK, LEG_TRIM_Z),
-              fc=WOOD2)                                        # cleat (end-on)
+    # Cleat seen end-on. Its bevel is on the long edges (which run toward/away
+    # from us here), so in this view it reads as a plain rectangle with SQUARE
+    # ends -- the legs sit flush on it. (The bevel shows in the side elevation.)
+    rect(ax, FRAME_A_Y0, LEG_TRIM_Z, FRAME_B_Y0 + STOCK - FRAME_A_Y0,
+         CLEAT_THK, fc=WOOD2)
     rect(ax, A_INNER, SZ0, B_INNER - A_INNER, SZ1 - SZ0,
          fc=WOOD2, ls="--")                                    # stretcher
     ax.text((A_INNER + B_INNER) / 2, (SZ0 + SZ1) / 2, "stretcher",
