@@ -15,9 +15,11 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
   * Feet splayed past the tips for stance; legs centered under the top.
   * End overhang ~4 1/2", side overhang ~1" (legs set wide for side-to-side stability).
 * One central stretcher ties the two frames together at the bottom.
-* Two cleats (~7 x 3 x 3/4) under the ends of the top: the leg tips bear on them,
-  they tie the two frames together at the top, and the top fastens to them with
-  slotted screws to allow seasonal wood movement.
+* Two cleats (~7 x 3 5/8 x 3/4) under the ends of the top: sized and centered on
+  the angled leg-tip footprint so each leg seats squarely (the trimmed tips land
+  slightly inboard of the leg's nominal tip). The leg tips bear on them, they tie
+  the two frames together at the top, and the top fastens to them with slotted
+  screws to allow seasonal wood movement.
 
 ## Tools on hand
 Tablesaw, router, miter saw, and standard hand tools.

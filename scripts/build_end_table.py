@@ -52,7 +52,7 @@ EASE_R = 0.125            # 1/8" roundover on the top's upper perimeter edge
 # fasten to the top with slotted screws (allowing seasonal wood movement) while
 # tying the two X-frames together at the top for rigidity.
 CLEAT_THK = 0.75          # 3/4" stock (Z); legs stop this far below the top
-CLEAT_W   = 3.0           # X dimension -- covers the leg-tip bearing footprint
+CLEAT_MARGIN = 0.375      # reveal of the cleat past the leg-tip footprint, each X side
 CLEAT_LEN = 7.0           # Y dimension -- runs across the width of the top
 
 LEG_TOP_Z = TOTAL_H - TOP_THK         # 23.25 -> underside of the top
@@ -176,11 +176,32 @@ stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0)
 
 # Cleats: a batten under each end of the top, centered across the width. The leg
 # tips bear up on them, and slotted screws run up into the top (wood movement).
+# Each cleat is sized/placed to the leg's *actual* top footprint at the trim
+# height (not the nominal TIP_L/TIP_R): the legs are diagonal boards trimmed
+# CLEAT_THK below their true tips, so their flat tops land slightly inboard and
+# span a wide footprint in X. Deriving from that footprint keeps the leg seated
+# squarely on the cleat with an even CLEAT_MARGIN reveal on each side.
+def leg_tip_x_extent(shape):
+    """X-range (inches) of a leg's flat top face at the trim height."""
+    eps = 0.1
+    sl = shape.common(Part.makeBox(
+        40 * IN, 12 * IN, eps * IN,
+        App.Vector(-6 * IN, -3 * IN, (LEG_TRIM_Z - eps) * IN)))
+    bb = sl.BoundBox
+    return bb.XMin / IN, bb.XMax / IN
+
+lx0, lx1 = leg_tip_x_extent(leg_b)   # leg_b's tip is the left end
+rx0, rx1 = leg_tip_x_extent(leg_a)   # leg_a's tip is the right end
 cleat_y0 = (TOP_WID - CLEAT_LEN) / 2.0
-cleat1 = Part.makeBox(CLEAT_W * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
-                      App.Vector((TIP_L - CLEAT_W / 2.0) * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
-cleat2 = Part.makeBox(CLEAT_W * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
-                      App.Vector((TIP_R - CLEAT_W / 2.0) * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+
+def cleat_box(x0, x1):
+    cx0 = x0 - CLEAT_MARGIN
+    cw = (x1 - x0) + 2 * CLEAT_MARGIN
+    return Part.makeBox(cw * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
+                        App.Vector(cx0 * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+
+cleat1 = cleat_box(lx0, lx1)
+cleat2 = cleat_box(rx0, rx1)
 
 # ------------------------------------------------------------------- document
 doc = App.newDocument("EndTable")
