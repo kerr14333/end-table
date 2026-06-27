@@ -1,0 +1,12 @@
+# Python
+__pycache__/
+*.pyc
+
+# FreeCAD auto-backups
+*.FCBak
+
+# Regenerable outputs (rebuild via scripts/) -- the .FCStd model of record and
+# the photoreal composite are kept; the rest regenerate from the scripts.
+model/*.stl
+renders/end_table_preview.png
+renders/table_clean.png
