@@ -8,9 +8,9 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
 * Overall: 24" tall.
 * Top: 20" long x 8 1/4" wide x 3/4" thick. Width is fixed; length may be adjusted.
   * Corners rounded, 1 1/8" radius.
-  * Underside perimeter: 45-deg routed chamfer 1/2" wide, leaving a 1/4" edge.
-  * Top edge eased with a 1/8" roundover.
-* Legs: two crossed (X) frames, 3/4" stock, tapered 2 1/2" wide at top to 1 1/4" at the foot.
+  * Underside perimeter: 45-deg routed chamfer 9/16" wide, leaving a 3/16" edge (reads thin / floats).
+  * Top edge crisped with a 1/32" micro-bevel.
+* Legs: two crossed (X) frames, 3/4" stock, tapered 2 1/2" wide at top to 1" at the foot.
   * Joined at each crossing with a half-lap, 3/8" deep.
   * Feet splayed past the tips for stance; legs centered under the top.
   * End overhang ~4 1/2", side overhang ~1" (legs set wide for side-to-side stability).

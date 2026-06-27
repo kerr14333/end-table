@@ -34,19 +34,20 @@ CORNER_R  = 1.125
 TOTAL_H   = 24.0
 STOCK     = 0.75          # leg-board thickness (Y direction)
 LEG_W_TOP = 2.5           # board width at the top tip
-LEG_W_FOOT= 1.25          # board width at the foot
+LEG_W_FOOT= 1.0           # board width at the foot (sleeker, finer foot)
 END_EXT   = 3.0           # how far to over-build each board before trimming flat
 
 # Top underside edge bevel, cut with a bearing-guided 45-deg chamfer bit:
 #   field stays TOP_THK; the perimeter shows a vertical EDGE_BAND, then a 45-deg
 #   chamfer runs up/inward over BEVEL_RUN to the flat field on the bottom.
 #   With EDGE_BAND + BEVEL_RUN == TOP_THK and run == rise, the bevel is 45 deg
-#   (set the chamfer bit to a 1/2" depth of cut).
-EDGE_BAND = 0.25          # visible vertical thickness at the very edge (1/4")
-BEVEL_RUN = 0.5           # 45-deg chamfer width = TOP_THK - EDGE_BAND
+#   (set the chamfer bit to a 9/16" depth of cut). A slimmer EDGE_BAND makes the
+#   overhang read thinner / "float" for a more modern look.
+EDGE_BAND = 0.1875        # visible vertical thickness at the very edge (3/16")
+BEVEL_RUN = 0.5625        # 45-deg chamfer width = TOP_THK - EDGE_BAND (9/16")
 
-# Soft "mid-century" eased top edge (a small roundover) to echo the chair.
-EASE_R = 0.125            # 1/8" roundover on the top's upper perimeter edge
+# Crisp modern top edge: a tiny micro-bevel (chamfer) instead of a roundover.
+EASE_BEVEL = 0.03125      # 1/32" chamfer on the top's upper perimeter edge
 
 # Cleats: battens under each end of the top. The leg tips bear on them, and they
 # fasten to the top with slotted screws (allowing seasonal wood movement) while
@@ -160,17 +161,17 @@ core = Part.Face(at_z(wI, z_bot)).extrude(App.Vector(0, 0, (z_top - z_bot) * IN)
 skirt = Part.makeLoft([at_z(wI, z_bot), at_z(wO, z_band)], True)
 top = plate.fuse(core).fuse(skirt).removeSplitter()
 
-# Ease the upper perimeter edge with a small roundover (mid-century soft edge)
+# Crisp the upper perimeter edge with a tiny micro-bevel (modern, sharper line)
 top_edges = [e for e in top.Edges
              if abs(e.Vertexes[0].Point.z - z_top * IN) < 1e-3
              and abs(e.Vertexes[1].Point.z - z_top * IN) < 1e-3]
-top = top.makeFillet(EASE_R * IN, top_edges)
+top = top.makeChamfer(EASE_BEVEL * IN, top_edges)
 
 # Central stretcher: butts against the inner face of each frame at the crossing
 A_inner = FRAME_A_Y0 + STOCK     # 1.875
 B_inner = FRAME_B_Y0             # 5.125
 SX0, SX1 = 9.625, 10.375   # 3/4" stock, centered on the crossing at X=10
-SZ0, SZ1 = 11.75, 14.25    # 2.5" tall, centered on the ~Z13 crossing
+SZ0, SZ1 = 12.25, 13.75    # 1.5" tall, centered on the ~Z13 crossing (slimmer)
 stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0) * IN,
                          App.Vector(SX0 * IN, A_inner * IN, SZ0 * IN))
 

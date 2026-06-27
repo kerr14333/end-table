@@ -25,7 +25,8 @@ TOP_LEN, TOP_WID, TOP_THK = 20.0, 8.25, 0.75
 CORNER_R = 1.125
 TOTAL_H = 24.0
 STOCK = 0.75
-LEG_W_TOP, LEG_W_FOOT = 2.5, 1.25
+LEG_W_TOP, LEG_W_FOOT = 2.5, 1.0
+BEVEL_RUN = 0.5625                       # underside chamfer width (9/16")
 CLEAT_THK, CLEAT_MARGIN, CLEAT_LEN = 0.75, 0.375, 7.0
 LEG_TOP_Z = TOTAL_H - TOP_THK            # 23.25
 LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK       # 22.5
@@ -35,7 +36,7 @@ OVERHANG = 1.0
 FRAME_A_Y0 = OVERHANG - STOCK / 2.0      # 0.625
 FRAME_B_Y0 = (TOP_WID - OVERHANG) - STOCK / 2.0   # 6.875
 A_INNER, B_INNER = FRAME_A_Y0 + STOCK, FRAME_B_Y0  # 1.375, 6.875
-SX0, SX1, SZ0, SZ1 = 9.625, 10.375, 11.75, 14.25
+SX0, SX1, SZ0, SZ1 = 9.625, 10.375, 12.25, 13.75
 
 # ---- styling --------------------------------------------------------------
 INK = "#3a2a1a"      # geometry outline
@@ -205,7 +206,7 @@ def end_elevation():
     dim(ax, (0, TOTAL_H), (TOP_WID, TOTAL_H), 1.2, '8¼"', side=1)
     dim(ax, (FRAME_A_Y0 + STOCK / 2, 0), (FRAME_B_Y0 + STOCK / 2, 0), 1.6,
         '6¼" (centerlines)', side=-1)
-    dim(ax, (A_INNER, SZ0), (A_INNER, SZ1), 0.7, '2½"', side=-1, fs=8)
+    dim(ax, (A_INNER, SZ0), (A_INNER, SZ1), 0.7, '1½"', side=-1, fs=8)
     leader(ax, (FRAME_A_Y0 + STOCK / 2, LEG_TRIM_Z * 0.7),
            (-2.6, LEG_TRIM_Z * 0.7 + 2), 'leg (¾" stock)', ha="right")
     ax.set_title("End elevation", color=INK, fontsize=11, pad=10)
@@ -236,7 +237,7 @@ def leg_detail():
               (Lcut - 2 * math.tan(math.radians(28.27)), hT), 1.2, "28°")
 
     dim(ax, (0, hF), (Lcut, hT), 1.7, '≈25½" point-to-point', side=1)
-    dim(ax, (0, -hF), (0, hF), 0.9, '1¼"', side=-1, fs=8)
+    dim(ax, (0, -hF), (0, hF), 0.9, '1"', side=-1, fs=8)
     dim(ax, (Lcut, -hT), (Lcut, hT), 1.5, '2½"', side=1, fs=8)
     dim(ax, (0, hF), (dlap, h), 0.5, '≈14¾" to lap', side=1, fs=8)
 
@@ -261,8 +262,10 @@ def top_plan():
     ax.add_patch(plt.Polygon(rounded_rect_path(0, 0, TOP_LEN, TOP_WID, CORNER_R),
                              closed=True, facecolor=WOOD2, edgecolor=INK, lw=1.4))
     # underside chamfer inner line (0.5" in)
-    ax.add_patch(plt.Polygon(rounded_rect_path(0.5, 0.5, TOP_LEN - 1, TOP_WID - 1,
-                                               max(CORNER_R - 0.5, 0.1)),
+    ax.add_patch(plt.Polygon(rounded_rect_path(BEVEL_RUN, BEVEL_RUN,
+                                               TOP_LEN - 2 * BEVEL_RUN,
+                                               TOP_WID - 2 * BEVEL_RUN,
+                                               max(CORNER_R - BEVEL_RUN, 0.1)),
                              closed=True, facecolor="none", edgecolor=CEN,
                              lw=0.8, ls=(0, (4, 3))))
     # cleats + leg-tip footprints
