@@ -31,13 +31,17 @@ CLEAT_THK, CLEAT_MARGIN, CLEAT_LEN = 0.75, 0.375, 7.0
 CLEAT_BEVEL = 0.25                       # 45-deg chamfer on long bottom edges
 LEG_TOP_Z = TOTAL_H - TOP_THK            # 23.25
 LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK       # 22.5
-FOOT_L, FOOT_R = 3.0, 17.0
 TIP_L, TIP_R = 4.5, 15.5
+LEAN_DEG = 30.0                          # leg lean from vertical (a miter-gauge stop)
+_dx = math.tan(math.radians(LEAN_DEG)) * LEG_TOP_Z
+FOOT_L, FOOT_R = TIP_R - _dx, TIP_L + _dx
 OVERHANG = 1.0
 FRAME_A_Y0 = OVERHANG - STOCK / 2.0      # 0.625
 FRAME_B_Y0 = (TOP_WID - OVERHANG) - STOCK / 2.0   # 6.875
 A_INNER, B_INNER = FRAME_A_Y0 + STOCK, FRAME_B_Y0  # 1.375, 6.875
-SX0, SX1, SZ0, SZ1 = 9.625, 10.375, 12.25, 13.75
+SX0, SX1 = 9.625, 10.375
+CROSS_Z = (10.0 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # leg crossing height
+SZ0, SZ1 = CROSS_Z - 0.75, CROSS_Z + 0.75                  # 1.5" tall, on crossing
 
 # ---- styling --------------------------------------------------------------
 INK = "#3a2a1a"      # geometry outline
@@ -161,34 +165,32 @@ def side_elevation():
     # stretcher (behind the crossing) shown dashed
     rect(ax, SX0, SZ0, SX1 - SX0, SZ1 - SZ0, fc="none", ec=CEN, lw=1.0, ls="--")
 
-    # crossing point
-    zc = LEG_TOP_Z * (FOOT_R - FOOT_L) / ((FOOT_R - FOOT_L) + (TIP_R - TIP_L))
-    # solve crossing analytically: centerlines meet at x=10
-    zc = LEG_TOP_Z * (FOOT_R - TIP_L) / ((TIP_R - FOOT_L) + (FOOT_R - TIP_L))
+    # crossing point: the two leg centerlines meet at x=10
     xc = 10.0
+    zc = (xc - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z
 
     # dimensions
     dim(ax, (0, 0), (0, TOTAL_H), 2.4, '24"', side=-1)
     dim(ax, (0, TOTAL_H), (TOP_LEN, TOTAL_H), 1.4, '20"', side=1)
-    dim(ax, (FOOT_L, 0), (FOOT_R, 0), 1.6, '14" foot stance', side=-1)
+    dim(ax, (FOOT_L, 0), (FOOT_R, 0), 1.6, f'≈{FOOT_R - FOOT_L:.1f}" foot stance', side=-1)
     dim(ax, (xc, 0), (xc, zc), 0.0, '', side=1)          # ext only
     ax.annotate("", xy=(xc, 0), xytext=(xc, zc), arrowprops=ARROW)
-    ax.text(xc + 0.3, zc / 2, '≈13"', color=DIM, ha="left", va="center", rotation=90)
+    ax.text(xc + 0.3, zc / 2, f'≈{zc:.1f}"', color=DIM, ha="left", va="center", rotation=90)
     # top thickness + cleat thickness at right
     leader(ax, (TOP_LEN - 0.3, LEG_TOP_Z + TOP_THK / 2),
            (TOP_LEN + 2.2, TOTAL_H + 0.4), 'top (¾" thick)')
     leader(ax, (cR[0] + 0.2, LEG_TRIM_Z + CLEAT_THK / 2),
            (TOP_LEN + 2.2, LEG_TRIM_Z - 0.4),
            'cleat — ¾" thick,\nbottom edges beveled')
-    # leg angle from floor + crossing angle
-    fa = np.array(leg_poly(FOOT_L, TIP_R)[0])   # foot corner near (3,0)
+    # leg angle from floor + crossing angle (both driven by LEAN_DEG)
+    lean = math.radians(LEAN_DEG)
     angle_dim(ax, (FOOT_L, 0), (FOOT_L + 2, 0),
-              (FOOT_L + 2 * math.sin(math.radians(28.27)),
-               2 * math.cos(math.radians(28.27))), 2.2, "61.7°")
+              (FOOT_L + 2 * math.sin(lean), 2 * math.cos(lean)), 2.2,
+              f"{90 - LEAN_DEG:.0f}°")
     angle_dim(ax, (xc, zc),
-              (xc + math.sin(math.radians(28.27)), zc + math.cos(math.radians(28.27))),
-              (xc - math.sin(math.radians(28.27)), zc + math.cos(math.radians(28.27))),
-              1.6, "≈57°")
+              (xc + math.sin(lean), zc + math.cos(lean)),
+              (xc - math.sin(lean), zc + math.cos(lean)),
+              1.6, f"{2 * LEAN_DEG:.0f}°")
     leader(ax, (xc + 0.9, zc + 0.6), (xc + 4.5, zc + 3.2), "half-lap (⅜\" deep)")
     leader(ax, (SX1, (SZ0 + SZ1) / 2), (SX1 + 4.0, (SZ0 + SZ1) / 2 - 2.0),
            "stretcher (behind)")
@@ -212,9 +214,9 @@ def end_elevation():
             ha="center", va="center", fontsize=8, color=INK)
     # hidden dowels: 2 per end, run across the butt joint into each leg
     for yb, ye in [(A_INNER - 0.5, A_INNER + 0.75), (B_INNER - 0.75, B_INNER + 0.5)]:
-        for z in (12.6875, 13.3125):
+        for z in (CROSS_Z - 0.3125, CROSS_Z + 0.3125):
             ax.plot([yb, ye], [z, z], color="#6b4a25", lw=1.2, ls=(0, (3, 2)))
-    leader(ax, (A_INNER + 0.4, 13.3125), ((A_INNER + B_INNER) / 2, 17.5),
+    leader(ax, (A_INNER + 0.4, CROSS_Z + 0.3125), ((A_INNER + B_INNER) / 2, 17.5),
            '3/8" dowels\n(2 per end)', ha="center")
 
     dim(ax, (0, 0), (0, TOTAL_H), 1.8, '24"', side=1)
@@ -236,9 +238,10 @@ def leg_detail():
     hF, hT = LEG_W_FOOT / 2, LEG_W_TOP / 2
     # face view (taper layout, square ends)
     fill_poly(ax, [(0, -hF), (0, hF), (Lcut, hT), (Lcut, -hT)])
-    # half-lap band, centered ~14.75" from foot, skewed at the crossing angle
-    dlap = math.hypot(10 - FOOT_L, 13.02)      # ~14.75 along centerline
-    theta = 2 * math.degrees(math.atan((TIP_R - FOOT_L) / 2 / LEG_TOP_Z))  # ~56.5
+    # half-lap band, centered at the crossing, skewed at the crossing angle
+    zc = (10 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # crossing height
+    dlap = math.hypot(10 - FOOT_L, zc)         # distance from foot along the board
+    theta = 2 * LEAN_DEG                        # crossing angle between the boards
     h = hF + (hT - hF) * dlap / Lcut           # half width at lap
     axw = (LEG_W_TOP * 0.78) / math.sin(math.radians(theta)) / 2  # half axial span
     sk = h / math.tan(math.radians(theta))     # skew shift per half-height
@@ -246,15 +249,15 @@ def leg_detail():
             (dlap + axw + sk, h), (dlap - axw + sk, h)]
     fill_poly(ax, band, fc="#b9895c", ec=INK, lw=0.8, hatch="///", alpha=0.9)
     # end-cut angle indicator at the top end
-    ax.plot([Lcut, Lcut - 2 * math.tan(math.radians(28.27))], [hT, -hT],
-            color=DIM, lw=1.0, ls="--")
+    end_off = 2 * math.tan(math.radians(LEAN_DEG))
+    ax.plot([Lcut, Lcut - end_off], [hT, -hT], color=DIM, lw=1.0, ls="--")
     angle_dim(ax, (Lcut, -hT), (Lcut, hT),
-              (Lcut - 2 * math.tan(math.radians(28.27)), hT), 1.2, "28°")
+              (Lcut - end_off, hT), 1.2, f"{LEAN_DEG:.0f}°")
 
-    dim(ax, (0, hF), (Lcut, hT), 1.7, '≈25½" point-to-point', side=1)
+    dim(ax, (0, hF), (Lcut, hT), 1.7, f'≈{Lcut:.0f}" point-to-point', side=1)
     dim(ax, (0, -hF), (0, hF), 0.9, '1"', side=-1, fs=8)
     dim(ax, (Lcut, -hT), (Lcut, hT), 1.5, '2½"', side=1, fs=8)
-    dim(ax, (0, hF), (dlap, h), 0.5, '≈14¾" to lap', side=1, fs=8)
+    dim(ax, (0, hF), (dlap, h), 0.5, f'≈{dlap:.1f}" to lap', side=1, fs=8)
 
     # edge (thickness) view below
     yb = -hT - 2.6

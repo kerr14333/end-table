@@ -63,10 +63,16 @@ CLEAT_BEVEL = 0.25        # 45-deg chamfer on the long bottom edges (subtler loo
 LEG_TOP_Z = TOTAL_H - TOP_THK         # 23.25 -> underside of the top
 LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK    # 22.5  -> legs stop here; cleats fill up
 
-# foot / tip X-positions of an X-frame (legs pulled inboard so the top
-# overhangs the ends; feet stay splayed past the tips for a wide stance)
-FOOT_L, FOOT_R = 3.0, 17.0
+# Tip X-positions set the ~4.5" end overhang; the lean then fixes the feet.
 TIP_L,  TIP_R  = 4.5, 15.5
+# Leg lean from vertical -- MUST be a miter-gauge positive stop, because the
+# half-lap is nibbled on the miter gauge at (90 - 2*LEAN_DEG) off square and the
+# leg ends are cut at LEAN_DEG off square. POWERTEC 71391 stops: any multiple of
+# 5 deg (0-60) plus 22.5. At 30 deg both cuts land on the 30 deg stop and the
+# crossing angle is 60 deg. Tapers are done on a jig, so they aren't constrained.
+LEAN_DEG = 30.0
+_dx = math.tan(math.radians(LEAN_DEG)) * LEG_TOP_Z   # X-run of a leg over its rise
+FOOT_L, FOOT_R = TIP_R - _dx, TIP_L + _dx            # feet splay out to set the lean
 
 # Y-centerlines of the two frames. A smaller side overhang widens the foot
 # stance across the weak (side-to-side) axis for better tip resistance, while
@@ -175,7 +181,9 @@ top = top.makeChamfer(EASE_BEVEL * IN, top_edges)
 A_inner = FRAME_A_Y0 + STOCK     # 1.375 -> inner face of frame A
 B_inner = FRAME_B_Y0             # 6.875 -> inner face of frame B
 SX0, SX1 = 9.625, 10.375   # 3/4" stock, centered on the crossing at X=10
-SZ0, SZ1 = 12.25, 13.75    # 1.5" tall, centered on the ~Z13 crossing (slimmer)
+STRETCHER_H = 1.5          # slimmer stretcher (Z height)
+CROSS_Z = (10.0 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # leg crossing height
+SZ0, SZ1 = CROSS_Z - STRETCHER_H / 2, CROSS_Z + STRETCHER_H / 2   # center on crossing
 stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0) * IN,
                          App.Vector(SX0 * IN, A_inner * IN, SZ0 * IN))
 
@@ -186,7 +194,7 @@ stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0)
 DOWEL_R = (0.375 / 2.0)          # 3/8" dowel
 DOWEL_LEN = 1.25                 # ~1/2" into the leg + ~3/4" into the stretcher
 DOWEL_X = (SX0 + SX1) / 2.0      # centered on the stretcher width (X=10)
-DOWEL_Z = (12.6875, 13.3125)     # two heights within the 1.5"-tall stretcher
+DOWEL_Z = (CROSS_Z - 0.3125, CROSS_Z + 0.3125)   # two heights within the stretcher
 
 def dowel(y_base, z):
     return Part.makeCylinder(DOWEL_R * IN, DOWEL_LEN * IN,

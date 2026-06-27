@@ -11,8 +11,12 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
   * Underside perimeter: 45-deg routed chamfer 9/16" wide, leaving a 3/16" edge (reads thin / floats).
   * Top edge crisped with a 1/32" micro-bevel.
 * Legs: two crossed (X) frames, 3/4" stock, tapered 2 1/2" wide at top to 1" at the foot.
+  * Leg lean 30 deg from vertical (60 deg crossing angle). Chosen so the leg-end
+    cuts (30 deg off square) and the half-lap nibble (90 - 2x30 = 30 deg off
+    square) both fall on a positive stop of the miter gauge (POWERTEC 71391:
+    every 5 deg to 60, plus 22.5). Tapers are done on a jig, so unconstrained.
   * Joined at each crossing with a half-lap, 3/8" deep.
-  * Feet splayed past the tips for stance; legs centered under the top.
+  * Feet splayed past the tips (~15 7/8" stance) for stability; legs centered under the top.
   * End overhang ~4 1/2", side overhang ~1" (legs set wide for side-to-side stability).
 * One central stretcher ties the two frames together at the crossing. It is glued
   and dowelled into each frame's inner face — two 3/8" dowels per end (its end
