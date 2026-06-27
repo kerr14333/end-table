@@ -20,10 +20,12 @@ end_table/
 ├── README.md                 this file
 ├── docs/
 │   ├── END_TABLE_SPECS.md    design brief / locked dimensions
-│   └── plans.html            printable build plans (cut list, joinery, steps)
+│   ├── plans.html            printable build plans (cut list, joinery, steps)
+│   └── diagrams/             generated SVG shop drawings (embedded in plans.html)
 ├── scripts/
 │   ├── build_end_table.py    parametric model generator (FreeCAD)
 │   ├── preview_end_table.py  orthographic CAD preview (matplotlib)
+│   ├── draw_diagrams.py      dimensioned shop drawings (matplotlib → docs/diagrams)
 │   └── gemini_render.py      photoreal render beside the chair (Gemini, on request)
 ├── model/                    generated CAD: end_table.FCStd (+ .stl mesh)
 ├── renders/                  generated images (previews + composite)
@@ -46,7 +48,13 @@ dimension, then re-run.
 python scripts\preview_end_table.py
 ```
 
-**3. Photoreal render beside the chair** (optional; writes
+**3. Generate the shop drawings** (writes dimensioned SVGs to `docs/diagrams/`,
+embedded in `plans.html`):
+```
+python scripts\draw_diagrams.py
+```
+
+**4. Photoreal render beside the chair** (optional; writes
 `renders/table_with_chair_realistic.png`):
 ```
 python scripts\gemini_render.py
