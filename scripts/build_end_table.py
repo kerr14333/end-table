@@ -55,6 +55,10 @@ EASE_BEVEL = 0.03125      # 1/32" chamfer on the top's upper perimeter edge
 CLEAT_THK = 0.75          # 3/4" stock (Z); legs stop this far below the top
 CLEAT_MARGIN = 0.375      # reveal of the cleat past the leg-tip footprint, each X side
 CLEAT_LEN = 7.0           # Y dimension -- runs across the width of the top
+CLEAT_BEVEL = 0.25        # 45-deg chamfer on the long bottom edges (subtler look).
+#   Only the long (Y-running) bottom edges are beveled; must stay < CLEAT_MARGIN
+#   so the full leg-tip footprint still bears on flat stock. Ends stay square
+#   because the leg tips land at the very ends of the cleat.
 
 LEG_TOP_Z = TOTAL_H - TOP_THK         # 23.25 -> underside of the top
 LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK    # 22.5  -> legs stop here; cleats fill up
@@ -198,8 +202,16 @@ cleat_y0 = (TOP_WID - CLEAT_LEN) / 2.0
 def cleat_box(x0, x1):
     cx0 = x0 - CLEAT_MARGIN
     cw = (x1 - x0) + 2 * CLEAT_MARGIN
-    return Part.makeBox(cw * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
-                        App.Vector(cx0 * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+    box = Part.makeBox(cw * IN, CLEAT_LEN * IN, CLEAT_THK * IN,
+                       App.Vector(cx0 * IN, cleat_y0 * IN, LEG_TRIM_Z * IN))
+    if CLEAT_BEVEL > 0:
+        zb = LEG_TRIM_Z * IN
+        long_bottom = [e for e in box.Edges                    # bottom edges, Y-run
+                       if abs(e.Vertexes[0].Point.z - zb) < 1e-6
+                       and abs(e.Vertexes[1].Point.z - zb) < 1e-6
+                       and abs(e.Vertexes[0].Point.x - e.Vertexes[1].Point.x) < 1e-6]
+        box = box.makeChamfer(CLEAT_BEVEL * IN, long_bottom)
+    return box
 
 cleat1 = cleat_box(lx0, lx1)
 cleat2 = cleat_box(rx0, rx1)

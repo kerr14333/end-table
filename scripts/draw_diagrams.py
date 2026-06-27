@@ -28,6 +28,7 @@ STOCK = 0.75
 LEG_W_TOP, LEG_W_FOOT = 2.5, 1.0
 BEVEL_RUN = 0.5625                       # underside chamfer width (9/16")
 CLEAT_THK, CLEAT_MARGIN, CLEAT_LEN = 0.75, 0.375, 7.0
+CLEAT_BEVEL = 0.25                       # 45-deg chamfer on long bottom edges
 LEG_TOP_Z = TOTAL_H - TOP_THK            # 23.25
 LEG_TRIM_Z = LEG_TOP_Z - CLEAT_THK       # 22.5
 FOOT_L, FOOT_R = 3.0, 17.0
@@ -113,6 +114,13 @@ def rect(ax, x, y, w, h, fc=WOOD2, ec=INK, lw=1.2, **kw):
                                lw=lw, **kw))
 
 
+def cleat_profile(a0, a1, zb, bv=CLEAT_BEVEL):
+    """Cleat cross-section with the two bottom corners chamfered (across `a`)."""
+    zt = zb + CLEAT_THK
+    return [(a0, zt), (a0, zb + bv), (a0 + bv, zb),
+            (a1 - bv, zb), (a1, zb + bv), (a1, zt)]
+
+
 def rounded_rect_path(x, y, w, h, r, k=10):
     """Vertices for a rounded rectangle (corner radius r)."""
     cs = [(x + r, y + r), (x + w - r, y + r),
@@ -149,7 +157,7 @@ def side_elevation():
     cR = (min(aR) - CLEAT_MARGIN, max(aR) + CLEAT_MARGIN)
     cL = (min(bR) - CLEAT_MARGIN, max(bR) + CLEAT_MARGIN)
     for c in (cL, cR):
-        rect(ax, c[0], LEG_TRIM_Z, c[1] - c[0], CLEAT_THK, fc=WOOD2)
+        fill_poly(ax, cleat_profile(c[0], c[1], LEG_TRIM_Z), fc=WOOD2)
     # stretcher (behind the crossing) shown dashed
     rect(ax, SX0, SZ0, SX1 - SX0, SZ1 - SZ0, fc="none", ec=CEN, lw=1.0, ls="--")
 
@@ -170,7 +178,8 @@ def side_elevation():
     leader(ax, (TOP_LEN - 0.3, LEG_TOP_Z + TOP_THK / 2),
            (TOP_LEN + 2.2, TOTAL_H + 0.4), 'top (¾" thick)')
     leader(ax, (cR[0] + 0.2, LEG_TRIM_Z + CLEAT_THK / 2),
-           (TOP_LEN + 2.2, LEG_TRIM_Z - 0.4), 'cleat (¾" thick)')
+           (TOP_LEN + 2.2, LEG_TRIM_Z - 0.4),
+           'cleat — ¾" thick,\nbottom edges beveled')
     # leg angle from floor + crossing angle
     fa = np.array(leg_poly(FOOT_L, TIP_R)[0])   # foot corner near (3,0)
     angle_dim(ax, (FOOT_L, 0), (FOOT_L + 2, 0),
@@ -195,8 +204,8 @@ def end_elevation():
     rect(ax, 0, LEG_TOP_Z, TOP_WID, TOP_THK)                   # top
     rect(ax, FRAME_A_Y0, 0, STOCK, LEG_TRIM_Z)                 # frame A
     rect(ax, FRAME_B_Y0, 0, STOCK, LEG_TRIM_Z)                 # frame B
-    rect(ax, FRAME_A_Y0, LEG_TRIM_Z, FRAME_B_Y0 + STOCK - FRAME_A_Y0,
-         CLEAT_THK, fc=WOOD2)                                  # cleat (end-on)
+    fill_poly(ax, cleat_profile(FRAME_A_Y0, FRAME_B_Y0 + STOCK, LEG_TRIM_Z),
+              fc=WOOD2)                                        # cleat (end-on)
     rect(ax, A_INNER, SZ0, B_INNER - A_INNER, SZ1 - SZ0,
          fc=WOOD2, ls="--")                                    # stretcher
     ax.text((A_INNER + B_INNER) / 2, (SZ0 + SZ1) / 2, "stretcher",

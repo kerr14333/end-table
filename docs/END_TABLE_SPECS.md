@@ -17,9 +17,10 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
 * One central stretcher ties the two frames together at the bottom.
 * Two cleats (~7 x 3 5/8 x 3/4) under the ends of the top: sized and centered on
   the angled leg-tip footprint so each leg seats squarely (the trimmed tips land
-  slightly inboard of the leg's nominal tip). The leg tips bear on them, they tie
-  the two frames together at the top, and the top fastens to them with slotted
-  screws to allow seasonal wood movement.
+  slightly inboard of the leg's nominal tip). The two long bottom edges are eased
+  with a 1/4" 45-deg bevel so the cleats read lighter (ends left square, where the
+  leg tips bear). The leg tips bear on them, they tie the two frames together at
+  the top, and the top fastens to them with slotted screws for wood movement.
 
 ## Tools on hand
 Tablesaw, router, miter saw, and standard hand tools.
