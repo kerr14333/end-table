@@ -14,7 +14,9 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
   * Joined at each crossing with a half-lap, 3/8" deep.
   * Feet splayed past the tips for stance; legs centered under the top.
   * End overhang ~4 1/2", side overhang ~1" (legs set wide for side-to-side stability).
-* One central stretcher ties the two frames together at the bottom.
+* One central stretcher ties the two frames together at the crossing. It is glued
+  and dowelled into each frame's inner face — two 3/8" dowels per end (its end
+  grain needs the dowels; glue alone there is weak).
 * Two cleats (~7 x 3 5/8 x 3/4) under the ends of the top: sized and centered on
   the angled leg-tip footprint so each leg seats squarely (the trimmed tips land
   slightly inboard of the leg's nominal tip). The two long bottom edges are eased

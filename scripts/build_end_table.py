@@ -172,12 +172,39 @@ top_edges = [e for e in top.Edges
 top = top.makeChamfer(EASE_BEVEL * IN, top_edges)
 
 # Central stretcher: butts against the inner face of each frame at the crossing
-A_inner = FRAME_A_Y0 + STOCK     # 1.875
-B_inner = FRAME_B_Y0             # 5.125
+A_inner = FRAME_A_Y0 + STOCK     # 1.375 -> inner face of frame A
+B_inner = FRAME_B_Y0             # 6.875 -> inner face of frame B
 SX0, SX1 = 9.625, 10.375   # 3/4" stock, centered on the crossing at X=10
 SZ0, SZ1 = 12.25, 13.75    # 1.5" tall, centered on the ~Z13 crossing (slimmer)
 stretcher = Part.makeBox((SX1 - SX0) * IN, (B_inner - A_inner) * IN, (SZ1 - SZ0) * IN,
                          App.Vector(SX0 * IN, A_inner * IN, SZ0 * IN))
+
+# Stretcher-to-frame joint: two 3/8" dowels per end (glue + dowels). The pins run
+# in Y across the butt joint -- ~1/2" into the leg's inner face, ~3/4" into the
+# stretcher's end grain (end-grain glue is weak, so the dowels do the work). The
+# matching holes are drilled (boolean cut) so the pins seat with no overlap.
+DOWEL_R = (0.375 / 2.0)          # 3/8" dowel
+DOWEL_LEN = 1.25                 # ~1/2" into the leg + ~3/4" into the stretcher
+DOWEL_X = (SX0 + SX1) / 2.0      # centered on the stretcher width (X=10)
+DOWEL_Z = (12.6875, 13.3125)     # two heights within the 1.5"-tall stretcher
+
+def dowel(y_base, z):
+    return Part.makeCylinder(DOWEL_R * IN, DOWEL_LEN * IN,
+                             App.Vector(DOWEL_X * IN, y_base * IN, z * IN),
+                             App.Vector(0, 1, 0))
+
+# left end pins start 1/2" inside frame A; right end pins end 1/2" inside frame B
+dowels = [("Dowel_A1", dowel(A_inner - 0.5, DOWEL_Z[0])),
+          ("Dowel_A2", dowel(A_inner - 0.5, DOWEL_Z[1])),
+          ("Dowel_B1", dowel(B_inner - 0.75, DOWEL_Z[0])),
+          ("Dowel_B2", dowel(B_inner - 0.75, DOWEL_Z[1]))]
+dowel_solid = dowels[0][1]
+for _, d in dowels[1:]:
+    dowel_solid = dowel_solid.fuse(d)
+# drill the holes so the pins seat flush (no solid overlap)
+stretcher = stretcher.cut(dowel_solid)
+fA_a, fA_b = fA_a.cut(dowel_solid), fA_b.cut(dowel_solid)
+fB_a, fB_b = fB_a.cut(dowel_solid), fB_b.cut(dowel_solid)
 
 # Cleats: a batten under each end of the top, centered across the width. The leg
 # tips bear up on them, and slotted screws run up into the top (wood movement).
@@ -227,7 +254,7 @@ parts = [
     ("Stretcher",      stretcher),
     ("Cleat_End1",     cleat1),
     ("Cleat_End2",     cleat2),
-]
+] + dowels
 for name, shp in parts:
     obj = doc.addObject("Part::Feature", name)
     obj.Shape = shp

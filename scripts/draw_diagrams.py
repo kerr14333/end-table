@@ -210,6 +210,12 @@ def end_elevation():
          fc=WOOD2, ls="--")                                    # stretcher
     ax.text((A_INNER + B_INNER) / 2, (SZ0 + SZ1) / 2, "stretcher",
             ha="center", va="center", fontsize=8, color=INK)
+    # hidden dowels: 2 per end, run across the butt joint into each leg
+    for yb, ye in [(A_INNER - 0.5, A_INNER + 0.75), (B_INNER - 0.75, B_INNER + 0.5)]:
+        for z in (12.6875, 13.3125):
+            ax.plot([yb, ye], [z, z], color="#6b4a25", lw=1.2, ls=(0, (3, 2)))
+    leader(ax, (A_INNER + 0.4, 13.3125), ((A_INNER + B_INNER) / 2, 17.5),
+           '3/8" dowels\n(2 per end)', ha="center")
 
     dim(ax, (0, 0), (0, TOTAL_H), 1.8, '24"', side=1)
     dim(ax, (0, TOTAL_H), (TOP_WID, TOTAL_H), 1.2, '8¼"', side=1)
