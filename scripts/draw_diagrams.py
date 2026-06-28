@@ -181,16 +181,22 @@ def side_elevation():
            (TOP_LEN + 2.2, TOTAL_H + 0.4), 'top (¾" thick)')
     leader(ax, (cR[0] + 0.2, LEG_TRIM_Z + CLEAT_THK / 2),
            (TOP_LEN + 2.2, LEG_TRIM_Z - 0.4),
-           'cleat — ¾" thick,\nbottom edges beveled')
-    # leg angle from floor + crossing angle (both driven by LEAN_DEG)
+           'cleat — ¾" thick,\nbottom edges beveled 45°')
+    # angles (all driven by LEAN_DEG): leg 60deg up from the floor at one foot,
+    # the same lean read as 30deg off vertical at the other foot (that's the angle
+    # the saw is set to), and the 60deg crossing of the X.
     lean = math.radians(LEAN_DEG)
     angle_dim(ax, (FOOT_L, 0), (FOOT_L + 2, 0),
               (FOOT_L + 2 * math.sin(lean), 2 * math.cos(lean)), 2.2,
-              f"{90 - LEAN_DEG:.0f}°")
+              f"{90 - LEAN_DEG:.0f}° (floor)")
+    ax.plot([FOOT_R, FOOT_R], [0, 2.5], color=DIM, lw=0.7, ls=":")   # plumb ref
+    angle_dim(ax, (FOOT_R, 0), (FOOT_R, 2.0),
+              (FOOT_R - 2 * math.sin(lean), 2 * math.cos(lean)), 2.2,
+              f"{LEAN_DEG:.0f}° (vert.)")
     angle_dim(ax, (xc, zc),
               (xc + math.sin(lean), zc + math.cos(lean)),
               (xc - math.sin(lean), zc + math.cos(lean)),
-              1.6, f"{2 * LEAN_DEG:.0f}°")
+              1.6, f"{2 * LEAN_DEG:.0f}° (X)")
     leader(ax, (xc + 0.9, zc + 0.6), (xc + 4.5, zc + 3.2), "half-lap (⅜\" deep)")
     leader(ax, (SX1, (SZ0 + SZ1) / 2), (SX1 + 4.0, (SZ0 + SZ1) / 2 - 2.0),
            "stretcher (behind)")
@@ -239,8 +245,20 @@ def leg_detail():
     L = math.hypot(TIP_R - FOOT_L, LEG_TOP_Z)
     Lcut = L * (LEG_TRIM_Z / LEG_TOP_Z)        # point-to-point trimmed length
     hF, hT = LEG_W_FOOT / 2, LEG_W_TOP / 2
-    # face view (taper layout, square ends)
+    # face view -- this is the rectangular BLANK with square ends. The real end
+    # cuts are 30 deg off square: the dashed lines are the actual cuts and the
+    # hatched triangles drop off as WASTE. The finished leg is a tapered
+    # parallelogram whose two long points (top & foot) come out roughly 60 deg.
     fill_poly(ax, [(0, -hF), (0, hF), (Lcut, hT), (Lcut, -hT)])
+    end_off_T = 2 * hT * math.tan(math.radians(LEAN_DEG))   # run across the top width
+    end_off_F = 2 * hF * math.tan(math.radians(LEAN_DEG))   # run across the foot width
+    for w in ([(Lcut, hT), (Lcut, -hT), (Lcut - end_off_T, -hT)],
+              [(0, hF), (end_off_F, hF), (0, -hF)]):
+        ax.add_patch(plt.Polygon(w, closed=True, facecolor="#d9cdbd",
+                                 edgecolor=INK, lw=0.6, hatch="xxx", zorder=2.5))
+    ax.text(Lcut - end_off_T / 3.0, -hT / 3.5, "waste", fontsize=6.5,
+            color="#5b4d3f", ha="center", va="center", zorder=3)
+
     # half-lap band, centered at the crossing, skewed at the crossing angle
     zc = (10 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # crossing height
     dlap = math.hypot(10 - FOOT_L, zc)         # distance from foot along the board
@@ -251,19 +269,53 @@ def leg_detail():
     band = [(dlap - axw - sk, -h), (dlap + axw - sk, -h),
             (dlap + axw + sk, h), (dlap - axw + sk, h)]
     fill_poly(ax, band, fc="#b9895c", ec=INK, lw=0.8, hatch="///", alpha=0.9)
-    # end-cut angle indicator at the top end
-    end_off = 2 * math.tan(math.radians(LEAN_DEG))
-    ax.plot([Lcut, Lcut - end_off], [hT, -hT], color=DIM, lw=1.0, ls="--")
-    angle_dim(ax, (Lcut, -hT), (Lcut, hT),
-              (Lcut - end_off, hT), 1.2, f"{LEAN_DEG:.0f}°")
+
+    # dashed lines = the actual finished end cuts. You SET the saw / miter gauge to
+    # 30 deg off square (the arc, measured against the square blank end). The sharp
+    # finished corner that results (~58-62 deg, off 60 by the taper) is a CHECK
+    # angle -- you don't lay it out, it falls out of the 30 deg cut.
+    ax.plot([Lcut, Lcut - end_off_T], [hT, -hT], color=DIM, lw=1.1, ls="--")
+    ax.plot([end_off_F, 0], [hF, -hF], color=DIM, lw=1.1, ls="--")
+
+    def _corner(v, p, q):
+        a, b = np.array(p) - np.array(v), np.array(q) - np.array(v)
+        return math.degrees(math.acos(np.clip(a @ b / (np.hypot(*a) * np.hypot(*b)), -1, 1)))
+    tr_top = _corner((Lcut, hT), (0, hF), (Lcut - end_off_T, -hT))
+    tr_foot = _corner((0, -hF), (Lcut, -hT), (end_off_F, hF))
+
+    # The SET angle (30 deg off square) is the same parallel cut at both ends, so
+    # show the arc once (at the foot). The sharp finished point at each end is a
+    # CHECK angle -- called out with leaders, not laid out.
+    angle_dim(ax, (0, -hF), (0, hF), (end_off_F, hF), 0.7, "30° off sq.")
+    leader(ax, (0.18, -hF + 0.16), (-1.6, -hF - 1.2),
+           f"finished\n≈{tr_foot:.0f}°", ha="center")
+    leader(ax, (Lcut - 0.6, hT - 0.45), (Lcut - 3.4, hT + 2.0),
+           f"finished point ≈{tr_top:.0f}°", ha="center")
+
+    # half-lap walls follow the 60deg crossing, so the notch is nibbled 30deg off
+    # square (= 90 - crossing). Show that against a square (plumb-to-edge) ref.
+    wall0 = (dlap - axw - sk, -h)
+    wall1 = (dlap - axw + sk, h)
+    ax.plot([wall0[0], wall0[0]], [wall0[1], wall0[1] + 2 * h],
+            color=DIM, lw=0.7, ls=":")
+    angle_dim(ax, wall0, (wall0[0], wall0[1] + 1.6), wall1, 0.8,
+              f"{90 - theta:.0f}° off sq. (nibble)")
+
+    taper_deg = math.degrees(math.atan((LEG_W_TOP - LEG_W_FOOT) / Lcut))
+    ax.text(Lcut * 0.46, -hT - 0.8,
+            f'taper ≈ {taper_deg:.1f}°  (2½" to 1" over ≈26")',
+            color=DIM, ha="center", va="center", fontsize=8)
+    ax.text(Lcut * 0.5, -hT - 1.35,
+            'solid = blank (square ends)  ·  dashed = real 30° cut (both ends)  ·  hatched = waste',
+            fontsize=7, color="#5b4d3f", ha="center", va="center")
 
     dim(ax, (0, hF), (Lcut, hT), 1.7, f'≈{Lcut:.0f}" point-to-point', side=1)
     dim(ax, (0, -hF), (0, hF), 0.9, '1"', side=-1, fs=8)
-    dim(ax, (Lcut, -hT), (Lcut, hT), 1.5, '2½"', side=1, fs=8)
+    dim(ax, (Lcut, -hT), (Lcut, hT), 1.5, '2½"', side=-1, fs=8)
     dim(ax, (0, hF), (dlap, h), 0.5, f'≈{dlap:.1f}" to lap', side=1, fs=8)
 
     # edge (thickness) view below
-    yb = -hT - 2.6
+    yb = -hT - 3.3
     rect(ax, 0, yb, Lcut, STOCK, fc=WOOD)
     rect(ax, dlap - 0.9, yb + STOCK / 2, 1.8, STOCK / 2, fc="#b9895c", hatch="///")
     dim(ax, (Lcut, yb), (Lcut, yb + STOCK), 0.7, '¾"', side=1, fs=8)
@@ -310,6 +362,8 @@ def top_plan():
     dim(ax, (TOP_LEN, cy0), (TOP_LEN, cy0 + CLEAT_LEN), 1.1, '7"', side=1, fs=8)
     leader(ax, (CORNER_R * 0.3, TOP_WID - CORNER_R * 0.3),
            (-2.6, TOP_WID + 1.2), 'R 1⅛"', ha="right")
+    leader(ax, (BEVEL_RUN, TOP_WID * 0.5), (-3.0, TOP_WID * 0.5 - 1.6),
+           'underside 45°\nchamfer (9/16")', ha="right")
     ax.text(cL[0] + (cL[1] - cL[0]) / 2, cy0 + CLEAT_LEN / 2, "cleat",
             color=DIM, ha="center", va="center", fontsize=8)
     ax.set_title("Top — plan view", color=INK, fontsize=11)

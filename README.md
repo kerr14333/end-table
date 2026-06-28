@@ -6,7 +6,7 @@ the leather armchair in `reference/chair.jpeg`.
 **Overall: 20" L × 8¼" W × 24" H** — a thin floating top with a chamfered
 underside edge over two crossed (X) tapered legs joined by half-laps, tied
 together at the bottom by a central stretcher and at the top by two cleats (which
-also attach the top with slotted screws for wood movement). Full dimensions and the build sequence are in
+also attach the top with figure-8 fasteners for wood movement). Full dimensions and the build sequence are in
 [`docs/plans.html`](docs/plans.html); the design brief is in
 [`docs/END_TABLE_SPECS.md`](docs/END_TABLE_SPECS.md).
 

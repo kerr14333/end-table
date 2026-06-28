@@ -26,7 +26,8 @@ Style: sleek modern / mid-century, to sit next to the chair in `images/chair.jpe
   slightly inboard of the leg's nominal tip). The two long bottom edges are eased
   with a 1/4" 45-deg bevel so the cleats read lighter (ends left square, where the
   leg tips bear). The leg tips bear on them, they tie the two frames together at
-  the top, and the top fastens to them with slotted screws for wood movement.
+  the top, and the top fastens to them with figure-8 (desktop) fasteners — two per
+  cleat, recessed flush into the cleat top, which pivot to allow seasonal wood movement.
 
 ## Tools on hand
 Tablesaw, router, miter saw, and standard hand tools.

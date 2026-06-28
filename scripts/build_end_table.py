@@ -50,8 +50,9 @@ BEVEL_RUN = 0.5625        # 45-deg chamfer width = TOP_THK - EDGE_BAND (9/16")
 EASE_BEVEL = 0.03125      # 1/32" chamfer on the top's upper perimeter edge
 
 # Cleats: battens under each end of the top. The leg tips bear on them, and they
-# fasten to the top with slotted screws (allowing seasonal wood movement) while
-# tying the two X-frames together at the top for rigidity.
+# fasten to the top with figure-8 (desktop) fasteners recessed flush into the cleat
+# top (they pivot to allow seasonal wood movement) while tying the two X-frames
+# together at the top for rigidity.
 CLEAT_THK = 0.75          # 3/4" stock (Z); legs stop this far below the top
 CLEAT_MARGIN = 0.375      # reveal of the cleat past the leg-tip footprint, each X side
 CLEAT_LEN = 7.0           # Y dimension -- runs across the width of the top
@@ -215,7 +216,8 @@ fA_a, fA_b = fA_a.cut(dowel_solid), fA_b.cut(dowel_solid)
 fB_a, fB_b = fB_a.cut(dowel_solid), fB_b.cut(dowel_solid)
 
 # Cleats: a batten under each end of the top, centered across the width. The leg
-# tips bear up on them, and slotted screws run up into the top (wood movement).
+# tips bear up on them, and figure-8 fasteners (recessed flush in the cleat top)
+# attach the top and pivot to allow wood movement.
 # Each cleat is sized/placed to the leg's *actual* top footprint at the trim
 # height (not the nominal TIP_L/TIP_R): the legs are diagonal boards trimmed
 # CLEAT_THK below their true tips, so their flat tops land slightly inboard and
