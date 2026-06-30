@@ -9,6 +9,7 @@
 # Geometry mirrors the parameter block in build_end_table.py (the single source
 # of truth). Keep these values in sync if that block changes.
 import math
+from fractions import Fraction
 from pathlib import Path
 import numpy as np
 import matplotlib
@@ -260,24 +261,48 @@ def leg_detail():
             color="#5b4d3f", ha="center", va="center", zorder=3)
 
     # Half-lap band = the footprint of the MATING leg where it crosses this one.
-    # Because the mating leg is tapered, its two long edges are NOT parallel (they
-    # splay by the full ~3.3 deg taper), so the two notch walls are not parallel
-    # either -- each follows one edge of the mating leg. The splay is tiny, so it
-    # is drawn here EXAGGERATED to make the point; in the shop you scribe each wall
-    # from the real mating leg rather than dial one angle.
+    # Computed from the REAL geometry: where the mating leg's two (tapered, so non-
+    # parallel) edges cross THIS leg's two edges. Because the lap is both skewed
+    # (60 deg crossing) AND on a tapered board, all four crossings sit at different
+    # distances from the foot -- so the band leans and its two walls aren't parallel.
     zc = (10 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # crossing height
-    dlap = math.hypot(10 - FOOT_L, zc)         # distance from foot along the board
+    dlap = math.hypot(10 - FOOT_L, zc)         # centerline distance foot->crossing
     theta = 2 * LEAN_DEG                        # crossing angle between centerlines
-    phi = math.degrees(math.atan((LEG_W_TOP - LEG_W_FOOT) / Lcut))  # full taper angle
-    EXAG = 4.0                                  # exaggerate the splay so it reads
-    h = hF + (hT - hF) * dlap / Lcut           # half width at lap
-    axw = (LEG_W_TOP * 0.78) / math.sin(math.radians(theta)) / 2  # half axial span
-    # the two walls follow the mating leg's two (non-parallel) edges: theta +/- phi
-    sk_lo = h / math.tan(math.radians(theta - phi * EXAG))   # foot-side wall
-    sk_hi = h / math.tan(math.radians(theta + phi * EXAG))   # top-side wall
-    band = [(dlap - axw - sk_lo, -h), (dlap + axw - sk_hi, -h),
-            (dlap + axw + sk_hi, h), (dlap - axw + sk_lo, h)]
+
+    def _leg_edges(foot_x, tip_x):
+        """The two long-edge lines (foot point + unit dir) of a leg, in elevation."""
+        Cf = np.array([foot_x, 0.0]); Ct = np.array([tip_x, LEG_TOP_Z])
+        u = (Ct - Cf); u = u / np.hypot(*u); nrm = np.array([-u[1], u[0]])
+        out = []
+        for sgn in (+1, -1):
+            pf = Cf + sgn * nrm * hF; pt = Ct + sgn * nrm * hT
+            d = pt - pf; foot = pf + (0.0 - pf[1]) / d[1] * d   # trim to the floor
+            out.append((foot, d / np.hypot(*d)))
+        return out
+
+    def _xpt(p, dp, q, dq):
+        M = np.array([[dp[0], -dq[0]], [dp[1], -dq[1]]])
+        a, _ = np.linalg.solve(M, q - p); return p + a * dp
+
+    _A, _B = _leg_edges(FOOT_L, TIP_R), _leg_edges(FOOT_R, TIP_L)
+    lap_d = []     # for each of THIS leg's edges: sorted [near, far] foot distances
+    for af, ad in _A:
+        lap_d.append(sorted(float(np.hypot(*(_xpt(af, ad, bf, bd) - af)))
+                            for bf, bd in _B))
+    lap_d.sort(key=lambda pr: -pr[0])          # larger -> the diagram's TOP edge
+    (top_near, top_far), (bot_near, bot_far) = lap_d
+
+    # place those distances along THIS leg's drawn edges (foot corners from the cuts)
+    FT, TT = np.array([0.0, hF]), np.array([Lcut, hT])                  # top edge
+    FB, TB = np.array([end_off_F, -hF]), np.array([Lcut - end_off_T, -hT])  # bottom
+    uT = (TT - FT) / np.hypot(*(TT - FT))
+    uB = (TB - FB) / np.hypot(*(TB - FB))
+    pT1, pT2 = FT + uT * top_near, FT + uT * top_far
+    pB1, pB2 = FB + uB * bot_near, FB + uB * bot_far
+    band = [tuple(pT1), tuple(pT2), tuple(pB2), tuple(pB1)]
     fill_poly(ax, band, fc="#b9895c", ec=INK, lw=0.8, hatch="///", alpha=0.9)
+    ax.plot([pT1[0], pB1[0]], [pT1[1], pB1[1]], color=INK, lw=0.9)   # shoulder wall 1
+    ax.plot([pT2[0], pB2[0]], [pT2[1], pB2[1]], color=INK, lw=0.9)   # shoulder wall 2
 
     # dashed lines = the actual finished end cuts. You SET the saw / miter gauge to
     # 30 deg off square (the arc, measured against the square blank end). The sharp
@@ -301,35 +326,37 @@ def leg_detail():
     leader(ax, (Lcut - 0.6, hT - 0.45), (Lcut - 3.4, hT + 2.0),
            f"finished point ≈{tr_top:.0f}°", ha="center")
 
-    # The notch CENTERLINE follows the 60deg crossing, so the nominal nibble is
-    # 30deg off square (= 90 - crossing). Dimension that against a square
-    # (plumb-to-edge) reference -- but the two walls actually sit at 30 +/- ~1.7deg
-    # because they splay with the taper (see the leader below).
-    sk_c = h / math.tan(math.radians(theta))
-    cl0, cl1 = (dlap - sk_c, -h), (dlap + sk_c, h)
-    ax.plot([cl0[0], cl1[0]], [cl0[1], cl1[1]], color=CEN, lw=0.7, ls="-.")
-    ax.plot([cl0[0], cl0[0]], [cl0[1], cl0[1] + 2 * h], color=DIM, lw=0.7, ls=":")
-    angle_dim(ax, cl0, (cl0[0], cl0[1] + 1.6), cl1, 0.8,
-              f"≈{90 - theta:.0f}° off sq. (nominal)")
-    leader(ax, (dlap + axw + (sk_hi + sk_lo) / 2, h * 0.2),
-           (dlap + axw + 3.0, h + 1.4),
-           "walls splay ≈3.3° (the taper,\nexaggerated) — scribe each")
+    # Foot-to-lap distances, measured ALONG each edge from that edge's foot corner.
+    # These differ on the two edges (skew + taper), so mark each edge to its own
+    # pair -- the ~30deg miter setting only roughs the walls; scribe to these lines.
+    def _frac(x):
+        f = Fraction(round(x * 16), 16); w = int(f); r = f - w
+        return f'{w}"' if r == 0 else f'{w} {r.numerator}/{r.denominator}"'
+
+    dim(ax, tuple(FT), tuple(pT1), 0.55, _frac(top_near), side=1, fs=7.5)   # top edge
+    dim(ax, tuple(FT), tuple(pT2), 1.55, _frac(top_far), side=1, fs=7.5)
+    dim(ax, tuple(FB), tuple(pB1), 0.55, _frac(bot_near), side=-1, fs=7.5)  # bottom edge
+    dim(ax, tuple(FB), tuple(pB2), 1.55, _frac(bot_far), side=-1, fs=7.5)
+    ax.text(float((pT1[0] + pB2[0]) / 2), 0.0, "half-lap", fontsize=7,
+            color="#3a2a1a", ha="center", va="center", rotation=58, zorder=4)
 
     taper_deg = math.degrees(math.atan((LEG_W_TOP - LEG_W_FOOT) / Lcut))
-    ax.text(Lcut * 0.46, -hT - 0.8,
+    ax.text(Lcut * 0.40, -hT - 2.7,
             f'taper ≈ {taper_deg:.1f}°  (2½" to 1" over ≈26")',
             color=DIM, ha="center", va="center", fontsize=8)
-    ax.text(Lcut * 0.5, -hT - 1.35,
+    ax.text(Lcut * 0.5, -hT - 3.25,
             'solid = blank (square ends)  ·  dashed = real 30° cut (both ends)  ·  hatched = waste',
             fontsize=7, color="#5b4d3f", ha="center", va="center")
+    ax.text(Lcut * 0.5, -hT - 3.85,
+            'half-lap lines differ on each edge (60° skew + taper) — scribe to them, '
+            "don't dial the angle", fontsize=7, color="#5b4d3f", ha="center", va="center")
 
-    dim(ax, (0, hF), (Lcut, hT), 1.7, f'≈{Lcut:.0f}" point-to-point', side=1)
+    dim(ax, (0, hF), (Lcut, hT), 2.75, f'≈{Lcut:.0f}" point-to-point', side=1)
     dim(ax, (0, -hF), (0, hF), 0.9, '1"', side=-1, fs=8)
     dim(ax, (Lcut, -hT), (Lcut, hT), 1.5, '2½"', side=-1, fs=8)
-    dim(ax, (0, hF), (dlap, h), 0.5, f'≈{dlap:.1f}" to lap', side=1, fs=8)
 
     # edge (thickness) view below
-    yb = -hT - 3.3
+    yb = -hT - 5.7
     rect(ax, 0, yb, Lcut, STOCK, fc=WOOD)
     rect(ax, dlap - 0.9, yb + STOCK / 2, 1.8, STOCK / 2, fc="#b9895c", hatch="///")
     dim(ax, (Lcut, yb), (Lcut, yb + STOCK), 0.7, '¾"', side=1, fs=8)
