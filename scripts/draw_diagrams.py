@@ -259,15 +259,24 @@ def leg_detail():
     ax.text(Lcut - end_off_T / 3.0, -hT / 3.5, "waste", fontsize=6.5,
             color="#5b4d3f", ha="center", va="center", zorder=3)
 
-    # half-lap band, centered at the crossing, skewed at the crossing angle
+    # Half-lap band = the footprint of the MATING leg where it crosses this one.
+    # Because the mating leg is tapered, its two long edges are NOT parallel (they
+    # splay by the full ~3.3 deg taper), so the two notch walls are not parallel
+    # either -- each follows one edge of the mating leg. The splay is tiny, so it
+    # is drawn here EXAGGERATED to make the point; in the shop you scribe each wall
+    # from the real mating leg rather than dial one angle.
     zc = (10 - FOOT_L) / (TIP_R - FOOT_L) * LEG_TOP_Z   # crossing height
     dlap = math.hypot(10 - FOOT_L, zc)         # distance from foot along the board
-    theta = 2 * LEAN_DEG                        # crossing angle between the boards
+    theta = 2 * LEAN_DEG                        # crossing angle between centerlines
+    phi = math.degrees(math.atan((LEG_W_TOP - LEG_W_FOOT) / Lcut))  # full taper angle
+    EXAG = 4.0                                  # exaggerate the splay so it reads
     h = hF + (hT - hF) * dlap / Lcut           # half width at lap
     axw = (LEG_W_TOP * 0.78) / math.sin(math.radians(theta)) / 2  # half axial span
-    sk = h / math.tan(math.radians(theta))     # skew shift per half-height
-    band = [(dlap - axw - sk, -h), (dlap + axw - sk, -h),
-            (dlap + axw + sk, h), (dlap - axw + sk, h)]
+    # the two walls follow the mating leg's two (non-parallel) edges: theta +/- phi
+    sk_lo = h / math.tan(math.radians(theta - phi * EXAG))   # foot-side wall
+    sk_hi = h / math.tan(math.radians(theta + phi * EXAG))   # top-side wall
+    band = [(dlap - axw - sk_lo, -h), (dlap + axw - sk_hi, -h),
+            (dlap + axw + sk_hi, h), (dlap - axw + sk_lo, h)]
     fill_poly(ax, band, fc="#b9895c", ec=INK, lw=0.8, hatch="///", alpha=0.9)
 
     # dashed lines = the actual finished end cuts. You SET the saw / miter gauge to
@@ -292,14 +301,19 @@ def leg_detail():
     leader(ax, (Lcut - 0.6, hT - 0.45), (Lcut - 3.4, hT + 2.0),
            f"finished point ≈{tr_top:.0f}°", ha="center")
 
-    # half-lap walls follow the 60deg crossing, so the notch is nibbled 30deg off
-    # square (= 90 - crossing). Show that against a square (plumb-to-edge) ref.
-    wall0 = (dlap - axw - sk, -h)
-    wall1 = (dlap - axw + sk, h)
-    ax.plot([wall0[0], wall0[0]], [wall0[1], wall0[1] + 2 * h],
-            color=DIM, lw=0.7, ls=":")
-    angle_dim(ax, wall0, (wall0[0], wall0[1] + 1.6), wall1, 0.8,
-              f"{90 - theta:.0f}° off sq. (nibble)")
+    # The notch CENTERLINE follows the 60deg crossing, so the nominal nibble is
+    # 30deg off square (= 90 - crossing). Dimension that against a square
+    # (plumb-to-edge) reference -- but the two walls actually sit at 30 +/- ~1.7deg
+    # because they splay with the taper (see the leader below).
+    sk_c = h / math.tan(math.radians(theta))
+    cl0, cl1 = (dlap - sk_c, -h), (dlap + sk_c, h)
+    ax.plot([cl0[0], cl1[0]], [cl0[1], cl1[1]], color=CEN, lw=0.7, ls="-.")
+    ax.plot([cl0[0], cl0[0]], [cl0[1], cl0[1] + 2 * h], color=DIM, lw=0.7, ls=":")
+    angle_dim(ax, cl0, (cl0[0], cl0[1] + 1.6), cl1, 0.8,
+              f"≈{90 - theta:.0f}° off sq. (nominal)")
+    leader(ax, (dlap + axw + (sk_hi + sk_lo) / 2, h * 0.2),
+           (dlap + axw + 3.0, h + 1.4),
+           "walls splay ≈3.3° (the taper,\nexaggerated) — scribe each")
 
     taper_deg = math.degrees(math.atan((LEG_W_TOP - LEG_W_FOOT) / Lcut))
     ax.text(Lcut * 0.46, -hT - 0.8,
